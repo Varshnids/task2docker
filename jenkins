@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "mydockerapp"
+        CONTAINER_NAME = "myapp-container"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                echo "Cloning the Git repository..."
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "Building the Docker image..."
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                echo "Running the Docker container..."
+                sh 'docker run -d --name $CONTAINER_NAME $IMAGE_NAME'
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                echo "Cleaning up old containers..."
+                sh 'docker rm -f $CONTAINER_NAME || true'
+                sh 'docker rmi -f $IMAGE_NAME || true'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline executed successfully!"
+        }
+        failure {
+            echo "Pipeline failed! Check the logs for errors."
+        }
+    }
+}
